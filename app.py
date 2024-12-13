@@ -1,6 +1,7 @@
 from flask import Flask, render_template, jsonify, request
 import PyPDF2
 import os
+import re
 
 app = Flask(__name__)
 
@@ -9,6 +10,7 @@ BIBLE_FOLDER = 'biblia'
 pdf_contents = {}
 
 def load_pdfs():
+
     for filename in os.listdir(BIBLE_FOLDER):
         if filename.endswith('.pdf'):
             file_path = os.path.join(BIBLE_FOLDER, filename)
@@ -40,13 +42,14 @@ def search():
         return jsonify({'error': 'PDF not found'})
     
     content = pdf_contents[filename]
-    sentences = content.split('. ')  # Split content into sentences using period as delimiter
+    # Split content into verses using regex pattern that matches number at start and period at end
+    verses = re.findall(r'\d+[^.]*\.', content)
     results = []
 
-    # Search through sentences for the term
-    for sentence in sentences:
-        if search_term.lower() in sentence.lower():
-            results.append(sentence.strip() + '.')  # Include the period back
+    # Search through verses for the term
+    for verse in verses:
+        if search_term.lower() in verse.lower():
+            results.append(verse.strip())
     
     return jsonify({'results': results})
 
